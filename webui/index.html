@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VSR 视频字幕/水印移除引擎</title>
+<link rel="stylesheet" href="styles.css?v=8">
+</head>
+<body>
+<header class="topbar">
+  <h1>VSR <span class="sub">视频字幕/水印移除引擎</span></h1>
+  <div class="engine-state">
+    <span id="state-badge" class="badge">未连接</span>
+    <span id="state-detail" class="state-detail">—</span>
+    <button id="btn-refresh-status" class="btn btn-ghost" title="刷新引擎状态">刷新</button>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============ 左列：设置区 + 参数区 ============ -->
+  <div class="left-col">
+
+    <!-- ◆ 设置区 -->
+    <section class="panel panel-settings" id="panel-settings">
+      <h2>⚙ 设置</h2>
+
+      <div class="field">
+        <label>目标视频 <span class="req" id="video-req">（必选）</span></label>
+        <div class="dropzone" id="dropzone">
+          <p>点击或拖拽视频到此处上传</p>
+          <p class="dz-sub">支持 mp4 / avi / mov / mkv / flv 等（建议 ≤1080p）</p>
+        </div>
+        <input type="file" id="video-input" accept="video/*" style="display:none">
+        <div class="video-chip" id="video-chip" style="display:none">
+          <span class="fc-name" id="video-name">—</span>
+          <span class="fc-size" id="video-size"></span>
+          <button class="fc-rm" id="btn-remove-video" title="移除视频">×</button>
+        </div>
+        <!-- 原视频预览（就在上传位置下方，上传成功即可播放） -->
+        <div class="source-preview" id="source-preview" style="display:none">
+          <video id="source-video" controls preload="metadata" playsinline></video>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label>算法（variant）
+          <!-- 问号图标 + 悬浮窗口共用同一容器（variant-help）：
+               弹窗是容器的子元素，鼠标从图标滑入弹窗全程不离开容器，
+               :hover 恒真 → 弹窗不会在鼠标到达前提前关闭 -->
+          <span class="variant-help" id="variant-help">
+            <span class="variant-help-icon" id="variant-help-icon" tabindex="0" role="button"
+                  aria-haspopup="true" aria-expanded="false" title="查看算法对比说明">?</span>
+            <div class="variant-compare-popup" id="variant-compare-popup">
+              <table class="variant-table">
+                <thead>
+                  <tr>
+                    <th>算法</th>
+                    <th>工作原理</th>
+                    <th>是否需要<br>OCR</th>
+                    <th>选区方式</th>
+                    <th>显存</th>
+                    <th>适用场景</th>
+                  </tr>
+                </thead>
+                <tbody id="variant-compare-body"><!-- app.js 填充 --></tbody>
+              </table>
+            </div>
+          </span>
+        </label>
+        <select id="variant-select">
+          <option value="">（获取中…）</option>
+        </select>
+      </div>
+      <div class="hint" id="variant-desc">—</div>
+
+      <div class="field-row" id="detect-mode-row" style="display:none">
+        <label>OCR 检测</label>
+        <select id="detect-mode-select">
+          <option value="PP_OCRv5_SERVER">PP-OCRv5 SERVER（精准）</option>
+          <option value="PP_OCRv5_MOBILE">PP-OCRv5 MOBILE（快速）</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <label>&nbsp;</label>
+        <div style="display:flex;gap:8px">
+          <button id="btn-load" class="btn btn-secondary">加载模型</button>
+          <button id="btn-unload" class="btn btn-danger">卸载模型</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ◆ 参数区 -->
+    <section class="panel panel-params" id="panel-params">
+      <h2>🎛 参数</h2>
+
+      <div class="field">
+        <label>字幕区域（上传后自动提取首帧，鼠标拖拽框选，支持多个区域）</label>
+
+        <div class="frame-canvas-wrap">
+          <canvas id="frame-canvas" width="860" height="484" style="display:none"></canvas>
+          <div class="frame-placeholder" id="frame-placeholder">
+            <p>上传视频后自动显示首帧</p>
+            <p class="dz-sub">按住鼠标左键在画面上拖拽，框选要移除的字幕/水印区域（可多个）</p>
+          </div>
+        </div>
+
+        <div class="region-toolbar" id="region-toolbar" style="display:none">
+          <span class="region-count" id="region-count">已选 0 个区域</span>
+          <label class="frame-no-label">提取帧
+            <input type="number" id="frame-no-input" min="0" step="1" value="0" title="首帧为黑场/黑屏时可换一帧">
+          </label>
+          <button id="btn-refresh-frame" class="btn btn-ghost" title="按上方帧号重新提取">换帧</button>
+          <button id="btn-undo-region" class="btn btn-ghost" title="撤销上一个区域">撤销</button>
+          <button id="btn-clear-regions" class="btn btn-ghost" title="清空全部区域">清空</button>
+        </div>
+
+        <div class="region-list" id="region-list"></div>
+
+        <div class="area-presets" id="area-presets">
+          <button class="preset" data-area="0.88,0.99,0.15,0.85">+底部字幕</button>
+          <button class="preset" data-area="0.01,0.12,0.15,0.85">+顶部字幕</button>
+          <button class="preset" data-area="0,1,0,1">+全屏</button>
+        </div>
+        <div class="hint" id="area-hint">STTN-AUTO 按选区直接擦除；其余算法可留空走 OCR 自动检测。不选区域 = 全屏处理</div>
+      </div>
+
+      <div class="field">
+        <label for="ab-input">处理时间区间 <span class="hint-inline">（可选，按帧号）</span></label>
+        <input type="text" id="ab-input" placeholder="例：0-120, 240-360（留空 = 处理全部帧）">
+        <div class="hint">按帧号过滤，多段用逗号分隔，每段 开始帧-结束帧</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 右列：结果区 ============ -->
+  <div class="right-col">
+
+    <!-- ◆ 结果区 -->
+    <section class="panel panel-result" id="panel-result">
+      <h2>🎬 结果与预览</h2>
+
+      <div class="gen-bar">
+        <button id="btn-process" class="btn btn-primary btn-large">开始处理</button>
+        <div class="progress-wrap" id="progress-wrap" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span class="progress-text" id="progress-text">准备中…</span>
+        </div>
+      </div>
+
+      <div class="error-box" id="error-box" style="display:none">
+        <button class="err-close" onclick="this.parentElement.style.display='none'">×</button>
+        <pre id="error-text"></pre>
+      </div>
+
+      <!-- 当前查看的结果（默认展示最新一条） -->
+      <div class="result-view result-view-video" id="result-view">
+        <p class="placeholder">处理后的视频将显示在这里</p>
+      </div>
+
+      <div class="result-meta" id="result-meta"></div>
+
+      <!-- 历史结果排队列表（每次处理的结果依次追加） -->
+      <div class="result-list-head" id="result-list-head" style="display:none">
+        <span class="result-list-title">📋 历史结果</span>
+        <span class="result-list-count" id="result-list-count">0</span>
+        <button id="btn-clear-results" class="btn btn-ghost btn-sm">清空</button>
+      </div>
+      <div class="result-list" id="result-list"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  VSR Video Subtitle Remover · PP-OCRv5 字幕检测 + 4 种 inpaint 算法（STTN-AUTO / STTN-DET / LAMA / ProPainter）· 引擎直连模式（/ui → 7012）
+</footer>
+
+<script src="app.js?v=9"></script>
+</body>
+</html>
