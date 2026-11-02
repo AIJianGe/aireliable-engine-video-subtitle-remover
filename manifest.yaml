@@ -39,7 +39,7 @@
 # ===== v0.1 必需字段 =====
 engine_id: video_subtitle_remover_d1e2f3a4
 engine_name: VSR-VideoSubtitleRemover
-engine_version: 0.1.0
+engine_version: 1.0.0
 aireliable_compat: ">=0.0.16"
 uv_env_name: video-vsr
 export_mode: source
@@ -94,8 +94,8 @@ source:
 
 # 升级信息
 upgrade:
-  check_url: https://api.github.com/repos/YaoFANGUK/video-subtitle-remover/releases/latest
-  auto_check: false
+  check_url: https://api.github.com/repos/AIJianGe/aireliable-engine-video-subtitle-remover/releases/latest
+  auto_check: true
 
 # 节点包依赖（integrated 范式不依赖节点包）
 node_packages: []
