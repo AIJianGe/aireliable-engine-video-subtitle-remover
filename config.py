@@ -20,6 +20,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aireliable_engine import EngineConfig as BaseEngineConfig
+
 
 # ===== 常量 =====
 
@@ -61,33 +63,19 @@ def _detect_gpu_vram_gb() -> float:
 
 
 @dataclass
-class EngineConfig:
+class EngineConfig(BaseEngineConfig):
     """VSR 视频字幕移除引擎运行配置。"""
 
-    # ===== 基础 =====
+    # ===== 基础（身份 / 端口默认值由本引擎覆盖，其余公共字段见基类）=====
     engine_id: str = ENGINE_ID
     engine_name: str = ENGINE_NAME
     capability: str = CAPABILITY
     engine_type: str = ENGINE_TYPE
     port: int = DEFAULT_PORT
-    host: str = "127.0.0.1"
-
-    # ===== 路径 =====
-    models_root: Path = Path("models")
-    data_root: Path = Path("data")
-    project_root: Path = Path(".")
-    output_root: Path = Path("output")
 
     # ===== 推导路径 =====
     model_dir: Path = field(init=False)
     log_dir: Path = field(init=False)
-
-    # ===== 设备 =====
-    # auto: 自动检测 GPU / cpu: 强制 CPU / cuda:0: 指定 GPU
-    device: str = "auto"
-
-    # ===== 日志 =====
-    log_level: str = "INFO"
 
     def __post_init__(self) -> None:
         """推导子路径。"""

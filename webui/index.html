@@ -176,6 +176,11 @@
   VSR Video Subtitle Remover · PP-OCRv5 字幕检测 + 4 种 inpaint 算法（STTN-AUTO / STTN-DET / LAMA / ProPainter）· 引擎直连模式（/ui → 7012）
 </footer>
 
+<!-- 模型清单（SDK 共享组件：GET /models，与平台「引擎详情 → 模型管理」同口径） -->
+<section id="model-inventory-wrap" style="width:calc(100% - 32px);max-width:1280px;margin:16px auto;padding:10px 16px;box-sizing:border-box;border:1px solid rgba(128,128,128,.25);border-radius:10px;background:rgba(128,128,128,.05);">
+  <div id="sdk-model-inventory"></div>
+</section>
+<script src="/sdk/model-inventory.js?v=0.5.0"></script>
 <script src="app.js?v=9"></script>
 </body>
 </html>

@@ -1,0 +1,44 @@
+# 开源引擎中心展示元数据（任务 80 / T4.1）
+schema: 1
+engine_id: video_subtitle_remover_d1e2f3a4
+
+name:
+  zh: "VSR 视频字幕擦除"
+  en: "VSR Video Subtitle Remover"
+
+description:
+  zh: "VSR 视频字幕/水印移除引擎：OCR 检测字幕区域，配合 STTN / LAMA / ProPainter 修复，输出保留原音轨。"
+  en: "VSR video subtitle and watermark remover: OCR-based detection with STTN / LAMA / ProPainter inpainting, original audio preserved."
+
+category: video
+tags:
+  - subtitle-removal
+  - inpainting
+  - video
+
+repository:
+  github: AIJianGe/aireliable-engine-video-subtitle-remover
+  gitee: AIJianGe/aireliable-engine-video-subtitle-remover
+
+cover: catalog/covers/video_subtitle_remover_d1e2f3a4.webp
+
+requirements:
+  python: ">=3.10,<3.13"
+  torch: ">=2.5.0"
+  gpu: required
+
+license: PolyForm-Noncommercial-1.0.0
+
+description_long:
+  zh: |-
+    VSR 先用 OCR 定位画面中的硬字幕、台标或水印区域，再分别用 STTN、LAMA 或 ProPainter 做区域修复，逐帧替换被遮挡的内容。
+
+    三种修复模型各有取舍：STTN 速度快、适合规整字幕；LAMA 对大面积静态遮挡更稳；ProPainter 面向快速运动与复杂背景的视频。可指定时间区间与区域微调，输出保留原音轨。
+
+    适合影视二创、搬运清理与素材净化。需要 NVIDIA GPU 与 torch >= 2.5.0。
+  en: |-
+    VSR first locates burned-in subtitles, logos or watermarks with OCR, then inpaints those regions frame by frame using STTN, LAMA or ProPainter.
+
+    Each model has trade-offs: STTN is fast and suits regular subtitles, LAMA handles large static occlusions steadily, and ProPainter targets fast motion and complex backgrounds. Time ranges and region tweaks are configurable, and the original audio track is preserved.
+
+    It suits remix editing, repost cleanup and asset sanitising. An NVIDIA GPU and torch >= 2.5.0 are required.
